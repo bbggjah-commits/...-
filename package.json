@@ -1,0 +1,13 @@
+{
+  "name": "apk-builder",
+  "version": "1.0.0",
+  "description": "تحويل المواقع إلى تطبيقات أندرويد",
+  "main": "index.html",
+  "scripts": {
+    "dev": "live-server --port=3000",
+    "build": "echo 'No build process needed'"
+  },
+  "keywords": ["apk", "android", "converter"],
+  "author": "Your Name",
+  "license": "MIT"
+}
