@@ -1,0 +1,14 @@
+# ملفات النظام
+.DS_Store
+Thumbs.db
+
+# محررات الكود
+.vscode/
+.idea/
+
+# البيئة
+.env
+.env.local
+
+# السجلات
+*.log
