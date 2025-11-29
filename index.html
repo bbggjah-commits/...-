@@ -4,21 +4,269 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>APK Builder - محول الويب إلى تطبيق</title>
-    
-    <!-- CDN Links -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;600;700&family=Inter:wght@300;400;600&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
-    <!-- CSS المدمج -->
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .font-arabic { font-family: 'IBM Plex Sans Arabic', sans-serif; }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .font-inter { font-family: 'Inter', sans-serif; }
+        
+        .agree-btn {
+            background: linear-gradient(to right, #2563eb, #4f46e5);
+            color: white;
+            cursor: pointer;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(to right, #10b981, #059669);
+            color: white;
+            cursor: pointer;
+        }
+        
+        .progress-bar {
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+    </style>
 </head>
 <body class="bg-black text-white font-arabic min-h-screen dir-rtl">
-    <!-- محتوى الموقع -->
-    
-    <!-- JavaScript -->
-    <script src="js/app.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/ui.js"></script>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-400">جاري التحميل...</p>
+        </div>
+    </div>
+
+    <!-- Terms Modal -->
+    <div id="termsModal" class="fixed inset-0 z-40 flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+        
+        <div class="relative bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md overflow-hidden">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">شروط الخدمة</h2>
+            </div>
+
+            <div class="p-6 max-h-[50vh] overflow-y-auto space-y-4">
+                <div class="space-y-2">
+                    <h3 class="text-blue-400 font-bold">سياسة الاستخدام</h3>
+                    <p class="text-gray-300 text-sm">الخدمة مجانية للاستخدام الشخصي</p>
+                    <p class="text-gray-300 text-sm">لا نتحمل مسؤولية المحتوى المنشأ</p>
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="text-red-400 font-bold">المحتوى المرفوض</h3>
+                    <p class="text-gray-300 text-sm">المواقع الإباحية والمخالفة للقوانين</p>
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-white/10">
+                <button id="agreeBtn" class="w-full py-3 agree-btn font-bold rounded-xl">
+                    فهمت واوافق
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="hidden">
+        <div class="container mx-auto px-6 py-12 flex flex-col items-center justify-center min-h-screen">
+            
+            <header class="flex flex-col items-center mb-16 text-center">
+                <div class="relative group mb-8">
+                    <img 
+                        src="http://my-host-imager-production.up.railway.app/uploads/1764358128039-200127464.jpg" 
+                        alt="APK Builder Logo" 
+                        class="w-32 h-32 rounded-full border-2 border-white/10"
+                    >
+                </div>
+
+                <h1 class="text-5xl md:text-7xl font-bold font-orbitron tracking-wider mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-500">
+                    APK Builder
+                </h1>
+                
+                <p class="text-xl md:text-2xl text-gray-400 font-light tracking-wide">
+                    حول أي موقع ويب إلى تطبيق أندرويد
+                </p>
+            </header>
+
+            <!-- نموذج إنشاء التطبيق -->
+            <section class="w-full max-w-2xl mb-16">
+                <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 shadow-2xl">
+                    <form id="apkForm" class="space-y-6">
+                        <div class="space-y-4">
+                            <label for="websiteUrl" class="block text-lg font-semibold text-gray-200">
+                                رابط الموقع
+                            </label>
+                            <input 
+                                type="url" 
+                                id="websiteUrl" 
+                                placeholder="https://example.com"
+                                class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white placeholder-gray-500"
+                                required
+                            >
+                        </div>
+
+                        <div class="space-y-4">
+                            <label for="appName" class="block text-lg font-semibold text-gray-200">
+                                اسم التطبيق (اختياري)
+                            </label>
+                            <input 
+                                type="text" 
+                                id="appName" 
+                                placeholder="اسم تطبيقي"
+                                class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white placeholder-gray-500"
+                            >
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            id="generateBtn"
+                            class="w-full py-4 generate-btn font-bold rounded-xl flex items-center justify-center gap-2"
+                        >
+                            إنشاء التطبيق
+                        </button>
+                    </form>
+
+                    <!-- منطقة التقدم -->
+                    <div id="progressSection" class="mt-6 space-y-4 hidden">
+                        <div class="flex justify-between text-sm text-gray-400">
+                            <span id="progressStatus">جاري تحضير التطبيق...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-800 rounded-full h-2">
+                            <div id="progressBar" class="progress-bar h-2 bg-green-500 rounded-full"></div>
+                        </div>
+                        
+                        <div id="downloadSection" class="text-center mt-6 hidden">
+                            <a 
+                                id="downloadLink" 
+                                class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl"
+                            >
+                                حمل التطبيق الآن
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ميزات الخدمة -->
+            <section class="w-full max-w-2xl mb-20">
+                <h2 class="text-3xl font-bold text-center mb-12 text-gray-100">مميزات الخدمة</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+                        <h3 class="text-xl font-bold mb-2 text-gray-100">تحويل فوري</h3>
+                        <p class="text-gray-400 text-sm">حول أي موقع ويب إلى تطبيق أندرويد</p>
+                    </div>
+
+                    <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+                        <h3 class="text-xl font-bold mb-2 text-gray-100">آمن ومجاني</h3>
+                        <p class="text-gray-400 text-sm">خدمة مجانية وآمنة للاستخدام</p>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="w-full text-center border-t border-white/5 pt-8 pb-4">
+                <p class="text-gray-500 text-sm font-arabic">
+                    جميع الحقوق محفوظة © 2025 APK Builder
+                </p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // كود JavaScript مبسط ومضمون
+        console.log("بدء تحميل الموقع...");
+        
+        // انتظر حتى تحميل الصفحة بالكامل
+        window.addEventListener('load', function() {
+            console.log("الصفحة محملة بالكامل");
+            
+            // تهيئة الأيقونات إذا كانت موجودة
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+                console.log("الأيقونات مهيأة");
+            }
+            
+            // إخفاء شاشة التحميل بعد ثانيتين
+            setTimeout(function() {
+                console.log("إخفاء شاشة التحميل");
+                document.getElementById('loadingScreen').style.display = 'none';
+                
+                // التحقق إذا وافق المستخدم مسبقاً
+                const hasAgreed = localStorage.getItem('termsAgreed');
+                console.log("المستخدم وافق مسبقاً:", hasAgreed);
+                
+                if (hasAgreed) {
+                    console.log("عرض المحتوى الرئيسي");
+                    document.getElementById('mainContent').style.display = 'block';
+                } else {
+                    console.log("عرض شروط الخدمة");
+                    document.getElementById('termsModal').style.display = 'flex';
+                }
+            }, 2000);
+
+            // حدث زر الموافقة
+            document.getElementById('agreeBtn').addEventListener('click', function() {
+                console.log("تم النقر على زر الموافقة");
+                localStorage.setItem('termsAgreed', 'true');
+                document.getElementById('termsModal').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+            });
+
+            // حدث إنشاء التطبيق
+            document.getElementById('apkForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log("تم تقديم النموذج");
+                
+                const websiteUrl = document.getElementById('websiteUrl').value;
+                const progressSection = document.getElementById('progressSection');
+                const progressBar = document.getElementById('progressBar');
+                const progressPercent = document.getElementById('progressPercent');
+                const progressStatus = document.getElementById('progressStatus');
+                const downloadSection = document.getElementById('downloadSection');
+                const generateBtn = document.getElementById('generateBtn');
+
+                // إظهار منطقة التقدم
+                progressSection.style.display = 'block';
+                generateBtn.disabled = true;
+                generateBtn.textContent = 'جاري الإنشاء...';
+
+                // محاكاة عملية البناء
+                let progress = 0;
+                const interval = setInterval(function() {
+                    progress += 10;
+                    if (progress > 100) progress = 100;
+                    
+                    progressBar.style.width = progress + '%';
+                    progressPercent.textContent = progress + '%';
+                    
+                    if (progress < 30) {
+                        progressStatus.textContent = 'جاري تحليل الموقع...';
+                    } else if (progress < 60) {
+                        progressStatus.textContent = 'جاري بناء التطبيق...';
+                    } else if (progress < 90) {
+                        progressStatus.textContent = 'جاري تحضير الملف...';
+                    } else {
+                        progressStatus.textContent = 'اكتمل البناء!';
+                    }
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        
+                        // إظهار رابط التحميل
+                        setTimeout(function() {
+                            downloadSection.style.display = 'block';
+                            alert('تم إنشاء التطبيق بنجاح! هذه نسخة تجريبية.');
+                            generateBtn.disabled = false;
+                            generateBtn.textContent = 'إنشاء التطبيق';
+                        }, 1000);
+                    }
+                }, 300);
+            });
+        });
+    </script>
 </body>
 </html>
